@@ -27,6 +27,7 @@ const updates = cases
   .map((line) => line.split(","));
 
 const printableUpdates = [];
+const updatesToFix = [];
 
 for (const update of updates) {
   let aproved = true;
@@ -43,11 +44,11 @@ for (const update of updates) {
       }
     });
 
-    prevPages.forEach((page) => {
-      if (pageRules.after.has(page)) {
-        aproved = false;
-      }
-    });
+    // prevPages.forEach((page) => {
+    //   if (pageRules.after.has(page)) {
+    //     aproved = false;
+    //   }
+    // });
 
     if (!aproved) {
       break;
@@ -56,6 +57,8 @@ for (const update of updates) {
 
   if (aproved) {
     printableUpdates.push(update);
+  } else {
+    updatesToFix.push(update);
   }
 }
 
@@ -63,4 +66,41 @@ const printableMiddleSum = printableUpdates.reduce((sum, current) => {
   return sum + +current[Math.floor(current.length / 2)];
 }, 0);
 
-console.log("part1:", printableMiddleSum);
+// part 2
+
+const fixUpdate = (update) => {
+  let updateToFix = [...update];
+  let pageIndex = 0;
+  let aproved = false;
+
+  while (!aproved) {
+    const currentPage = updateToFix[pageIndex];
+    const rules = ruleSet[currentPage];
+    const nextPages = updateToFix.slice(pageIndex + 1);
+
+    nextPages.forEach((page, index) => {
+      if (rules.before.has(page)) {
+        updateToFix.splice(pageIndex + 1 + index, 1);
+        updateToFix.splice(pageIndex, 0, page);
+      }
+    });
+
+    prevPages.forEach((page, index) => {
+      if (rules.after.has(page)) {
+        updateToFix.splice(index, 1);
+        updateToFix.splice(pageIndex + 1, 0, page);
+      }
+    });
+
+    pageIndex++;
+  }
+
+  return updateToFix;
+};
+
+const fixedMiddleSum = updatesToFix.map(fixUpdate).reduce((sum, current) => {
+  return sum + +current[Math.floor(current.length / 2)];
+}, 0);
+
+console.log("part1:", printableMiddleSum); // Part 1: 6034;
+console.log("part2:", fixedMiddleSum); // Part 1: 6034;
