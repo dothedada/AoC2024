@@ -58,11 +58,4 @@ while (nextTile(moves[direction[current]])) {
 
 let checkedTiles = 0;
 
-for (let row = 0; row < roomRows; row++) {
-  for (let col = 0; col < roomCols; col++) {
-    if (/\^|X/.test(watchTile([row, col]))) {
-      checkedTiles++;
-    }
-  }
-}
 console.log(checkedTiles);
