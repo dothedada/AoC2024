@@ -27,118 +27,69 @@ for (const towerType of towerTypes) {
 }
 
 function* iterateLocations(locations) {
-  let firstIndex = 0;
-  let secondIndex = 1;
-
-  while (true) {
-    yield [locations[firstIndex], locations[secondIndex]];
-
-    secondIndex++;
-    if (secondIndex === locations.length) {
-      firstIndex++;
-      secondIndex = firstIndex + 1;
-    }
-
-    if (firstIndex >= locations.length - 1) {
-      break;
+  for (let i = 0; i < locations.length - 1; i++) {
+    for (let j = i + 1; j < locations.length; j++) {
+      yield [locations[i], locations[j]];
     }
   }
 }
 
-const setAntinodes = (towerA, towerB, map) => {
+const setAntinode = (startRow, startCol, difRow, difCol, harmonics, map) => {
   const mapHeight = map.length;
   const mapWidth = map[0].length;
-  const [rowA, colA] = towerA;
-  const [rowB, colB] = towerB;
-  const antinodeARow = rowA + (rowA - rowB);
-  const antinodeACol = colA + (colA - colB);
-  const antinodeBRow = rowB + (rowB - rowA);
-  const antinodeBCol = colB + (colB - colA);
-
-  if (antinodeARow >= 0 && antinodeACol >= 0 && antinodeACol < mapWidth) {
-    map[antinodeARow][antinodeACol] = "#";
-  }
-  if (
-    antinodeBRow < mapHeight &&
-    antinodeBCol >= 0 &&
-    antinodeBCol < mapWidth
-  ) {
-    map[antinodeBRow][antinodeBCol] = "#";
-  }
-};
-const setAntinodesHarmonics = (towerA, towerB, map) => {
-  const mapHeight = map.length;
-  const mapWidth = map[0].length;
-  const [rowA, colA] = towerA;
-  const [rowB, colB] = towerB;
-  const diffARow = rowA - rowB;
-  const diffACol = colA - colB;
-  const diffBRow = rowB - rowA;
-  const diffBCol = colB - colA;
-
-  let currentA = [rowA, colA];
-  let currentB = [rowB, colB];
+  let current = [startRow, startCol];
 
   while (true) {
     if (
-      currentA[0] + diffARow < 0 ||
-      currentA[0] + diffARow >= mapHeight ||
-      currentA[1] + diffACol < 0 ||
-      currentA[1] + diffACol >= mapWidth
+      current[0] + difRow < 0 ||
+      current[0] + difRow >= mapHeight ||
+      current[1] + difCol < 0 ||
+      current[1] + difCol >= mapWidth
     ) {
       break;
     }
-    map[currentA[0] + diffARow][currentA[1] + diffACol] = "#";
-    currentA = [currentA[0] + diffARow, currentA[1] + diffACol];
-  }
+    map[current[0] + difRow][current[1] + difCol] = "#";
+    current = [current[0] + difRow, current[1] + difCol];
 
-  while (true) {
-    if (
-      currentB[0] + diffBRow < 0 ||
-      currentB[0] + diffBRow >= mapHeight ||
-      currentB[1] + diffBCol < 0 ||
-      currentB[1] + diffBCol >= mapWidth
-    ) {
+    if (!harmonics) {
       break;
     }
-    map[currentB[0] + diffBRow][currentB[1] + diffBCol] = "#";
-    currentB = [currentB[0] + diffBRow, currentB[1] + diffBCol];
   }
 };
 
-const setAllAntinodes = (map) => {
+const setAntinodes = (towerA, towerB, map, harmonics) => {
+  const [rowA, colA] = towerA;
+  const [rowB, colB] = towerB;
+  const beforeDifRow = rowA - rowB;
+  const beforeDifCol = colA - colB;
+  const afterDifRow = rowB - rowA;
+  const afterDifCol = colB - colA;
+
+  setAntinode(rowA, colA, beforeDifRow, beforeDifCol, harmonics, map);
+  setAntinode(rowB, colB, afterDifRow, afterDifCol, harmonics, map);
+};
+
+const processAntinodes = (map, harmonics) => {
   const antinodesMap = [...map];
   for (const towerType in towers) {
     const towerTypeRelations = iterateLocations(towers[towerType]);
 
     for (const towersPosition of towerTypeRelations) {
       const [towerA, towerB] = towersPosition;
-      setAntinodes(towerA, towerB, antinodesMap);
-    }
-  }
-  return antinodesMap;
-};
-const setAllAntinodesHarmonics = (map) => {
-  const antinodesMap = [...map];
-  for (const towerType in towers) {
-    const towerTypeRelations = iterateLocations(towers[towerType]);
-
-    for (const towersPosition of towerTypeRelations) {
-      const [towerA, towerB] = towersPosition;
-      setAntinodesHarmonics(towerA, towerB, antinodesMap);
+      setAntinodes(towerA, towerB, antinodesMap, harmonics);
     }
   }
   return antinodesMap;
 };
 
-const mapPart1 = setAllAntinodes(map)
+const mapPart1 = processAntinodes(map, false)
   .map((row) => row.join(""))
   .join("")
   .replace(/[^#]/g, "").length;
 
-const mapPart2 = setAllAntinodesHarmonics(map)
+const mapPart2 = processAntinodes(map, true)
   .map((row) => row.join(""))
   .join("")
   .replace(/[.]/g, "").length;
 
-console.log(mapPart1, mapPart2);
+console.log("part1:", mapPart1, "part2:", mapPart2);
