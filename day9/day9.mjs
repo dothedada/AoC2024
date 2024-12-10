@@ -3,7 +3,6 @@ import { readFileSync } from "fs";
 const path = "./input.txt";
 const data = readFileSync(path, "utf-8");
 
-// iniciar variables
 const diskMap = data.split("").map((str) => +str);
 const diskData = (diskMap) => {
   const diskData = [];
@@ -12,7 +11,6 @@ const diskData = (diskMap) => {
     if (diskIndex % 2 === 0) {
       diskData.push(...Array(diskMap[diskIndex]).fill(id));
       id++;
-      // id %= 10;
     } else {
       diskData.push(...Array(diskMap[diskIndex]).fill("."));
     }
@@ -36,10 +34,73 @@ const orderDisk = (disk) => {
   return newDisk;
 };
 
-const cleanSpace = (disk) => disk.filter((data) => /[^.]/.test(data));
+const getDataSize = (endIndex, value, disk) => {
+  let currentIndex = endIndex;
+  while (disk[currentIndex] === value) {
+    currentIndex--;
+  }
+  return endIndex - currentIndex;
+};
+
+const allocateSpace = (chunkSize, disk, limit) => {
+  let startIndex = -1;
+  let currentSize = 0;
+
+  for (let i = 0; i < limit; i++) {
+    if (disk[i] === ".") {
+      if (startIndex === -1) {
+        startIndex = i;
+      }
+      currentSize++;
+
+      if (currentSize === chunkSize) {
+        return startIndex;
+      }
+    } else {
+      startIndex = -1;
+      currentSize = 0;
+    }
+  }
+
+  return null;
+};
+
+const orderDiskUnfragmented = (disk) => {
+  const newDisk = [...disk];
+
+  let currenSector = newDisk.length - 1;
+  let curretnSwap = 0;
+  let availableSpaceIndex = null;
+
+  while (currenSector >= 0) {
+    if (/[0-9]/.test(newDisk[currenSector])) {
+      if (!curretnSwap) {
+        curretnSwap = getDataSize(currenSector, newDisk[currenSector], newDisk);
+        availableSpaceIndex = allocateSpace(curretnSwap, newDisk, currenSector);
+      }
+      if (availableSpaceIndex === null) {
+        currenSector = currenSector - curretnSwap;
+        curretnSwap = 0;
+        continue;
+      }
+
+      curretnSwap--;
+      swapMemory(currenSector, availableSpaceIndex + curretnSwap, newDisk);
+    } else {
+      curretnSwap = 0;
+      availableSpaceIndex = null;
+    }
+    currenSector--;
+  }
+
+  return newDisk;
+};
 
 const checksum = (disk) => {
   return disk.reduce((sum, id, index) => {
+    if (id === ".") {
+      return sum;
+    }
     const dataValue = id * index;
     const checkSum = dataValue + sum;
     return checkSum;
@@ -48,7 +109,9 @@ const checksum = (disk) => {
 
 const disk = diskData(diskMap);
 const orderedDisk = orderDisk(disk);
-const cleanedDisk = cleanSpace(orderedDisk);
-const dataValue = checksum(cleanedDisk);
+const dataValue = checksum(orderedDisk);
 
-console.log(cleanedDisk, dataValue);
+const orderedUnfragmented = orderDiskUnfragmented(disk);
+const unfragmentedValue = checksum(orderedUnfragmented);
+
+console.log(dataValue, unfragmentedValue);
