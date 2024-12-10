@@ -1,6 +1,6 @@
 import { readFileSync } from "fs";
 
-const path = "./input.txt";
+const path = "./test.txt";
 const data = readFileSync(path, "utf-8");
 
 const diskMap = data.split("").map((str) => +str);
@@ -51,9 +51,7 @@ const allocateSpace = (chunkSize, disk, limit) => {
       if (startIndex === -1) {
         startIndex = i;
       }
-      currentSize++;
-
-      if (currentSize === chunkSize) {
+      if (++currentSize === chunkSize) {
         return startIndex;
       }
     } else {
@@ -88,7 +86,6 @@ const orderDiskUnfragmented = (disk) => {
       swapMemory(currenSector, availableSpaceIndex + curretnSwap, newDisk);
     } else {
       curretnSwap = 0;
-      availableSpaceIndex = null;
     }
     currenSector--;
   }
