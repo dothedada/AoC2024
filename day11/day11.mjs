@@ -40,14 +40,10 @@ const stoneRender = (stoneToken) => {
   return renderFunction[mutation](value);
 };
 
-const blinker = (data = new Map(), blinks) => {
+const blinker = (data, blinks) => {
   let stones = new Map();
   for (const [stone] of data) {
-    if (stones.has(stone)) {
-      stones.set(stone, stones.get(stone) + 1);
-    } else {
-      stones.set(stone, 1);
-    }
+    stones.set(stone, (stones.get(stone) || 0) + 1);
   }
 
   for (let blink = 0; blink < blinks; blink++) {
